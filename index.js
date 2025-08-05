@@ -1,47 +1,27 @@
- import jsonfile from "jsonfile";
-import moment from "moment";
-import simpleGit from "simple-git";
-import random from "random";
+// index.js
+const fs = require('fs');
+const simpleGit = require('simple-git');
+const dayjs = require('dayjs');
+const git = simpleGit();
 
-const path = "./data.json";
+const data = JSON.parse(fs.readFileSync('data.json'));
 
-const isValidDate = (date) => {
-  const startDate = moment("2019-01-01");
-  const endDate = moment("2024-12-13");
-  return date.isBetween(startDate, endDate, null, "[]");
-};
+(async () => {
+  for (const item of data) {
+    const { date, count } = item;
 
-const markCommit = async (date) => {
-  const data = { date: date.toISOString() };
-  await jsonfile.writeFile(path, data);
+    for (let i = 0; i < count; i++) {
+      fs.writeFileSync('commit.txt', `${date} - ${i} - ${Date.now()}`);
+      await git.add('./*');
+      await git.commit(`Commit on ${date}`, undefined, {
+        '--date': `${date}T12:00:00`
+      });
 
-  const git = simpleGit();
-  await git.add([path]);
-  await git.commit(date.toISOString(), { "--date": date.toISOString() });
-};
-
-const makeCommits = async (n) => {
-  const git = simpleGit();
-
-  for (let i = 0; i < n; i++) {
-    const randomWeeks = random.int(0, 54 + 4);
-    const randomDays = random.int(0, 6);
-
-    const randomDate = moment("2019-01-01")
-      .add(randomWeeks, "weeks")
-      .add(randomDays, "days");
-
-    if (isValidDate(randomDate)) {
-      console.log(`Creating commit: ${randomDate.toISOString()}`);
-      await markCommit(randomDate);
-    } else {
-      console.log(`Invalid date: ${randomDate.toISOString()}, skipping...`);
+      process.env.GIT_AUTHOR_DATE = `${date}T12:00:00`;
+      process.env.GIT_COMMITTER_DATE = `${date}T12:00:00`;
     }
   }
 
-  console.log("Pushing all commits...");
-  await git.push();
-};
-
-makeCommits(50000); // Số commit bạn muốn tạo
-
+  await git.push('origin', 'main');
+  console.log('✅ All commits pushed!');
+})();
