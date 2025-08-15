@@ -2,10 +2,10 @@
 const fs = require('fs');
 const dayjs = require('dayjs');
 
-const startDate = dayjs().subtract(52, 'week'); // 1 năm trước
+const startDate = dayjs().subtract(1, 'week'); // 1 năm trước
 const data = [];
 
-for (let i = 0; i < 52 * 7; i++) {
+for (let i = 0; i < 1 * 7; i++) {
   const date = startDate.add(i, 'day');
   const weekday = date.day(); // 0 = Sunday, 6 = Saturday
 
